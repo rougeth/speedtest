@@ -1,6 +1,5 @@
-FROM python:alpine
+FROM python:slim
 WORKDIR /usr/src/app
 COPY . .
-RUN
-RUN pip install loguru schedule speedtest-cli
+RUN pip install -r requirements.txt
 CMD python main.py

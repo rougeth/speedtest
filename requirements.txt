@@ -1,0 +1,6 @@
+loguru
+matplotlib
+pandas
+pyTelegramBotAPI
+schedule
+speedtest-cli
