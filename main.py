@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import click
 import matplotlib.dates as md
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
@@ -15,11 +16,8 @@ import telebot
 from loguru import logger
 
 
-RUN_FUNCTION = os.environ.get("RUN_FUNCTION")
-OUTPUT_FOLDER = Path(os.environ.get("OUTPUT_FOLDER", "tests/"))
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "invalid-token")
-
-bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False, skip_pending=True)
+REPORTS_PATH = ""
+telegram = telebot.TeleBot("invalid-token", threaded=False, skip_pending=True)
 
 
 def reports(f):
@@ -107,7 +105,7 @@ def dashboard_last_week(reports_path):
     return dashboard_download_upload_ping(data)
 
 
-def job_speed_test():
+def job_speed_test(path):
     logger.info("Job started: job_speed_test")
     try:
         output = subprocess.check_output(
@@ -118,7 +116,7 @@ def job_speed_test():
         return
 
     filename = "{:%Y%m%d-%H%M}.json".format(datetime.now())
-    with (OUTPUT_FOLDER / filename).open("w") as fp:
+    with (path / filename).open("w") as fp:
         fp.write(output)
     logger.info("Job finished: job_speed_test")
 
@@ -130,44 +128,57 @@ def from_plot_to_image(plot):
     return buf
 
 
-@bot.message_handler(commands=["today"])
+@telegram.message_handler(commands=["today"])
 def bot_today(message):
-    plot = dashboard_today(OUTPUT_FOLDER)
+    global REPORTS_PATH
+    plot = dashboard_today(REPORTS_PATH)
     if not plot:
-        bot.send_message(message.chat.id, "No data available")
+        telegram.send_message(message.chat.id, "No data available")
         return
 
-    bot.send_photo(message.chat.id, from_plot_to_image(plot))
+    telegram.send_photo(message.chat.id, from_plot_to_image(plot))
 
 
-@bot.message_handler(commands=["last_week"])
+@telegram.message_handler(commands=["last_week"])
 def bot_last_week(message):
-    plot = dashboard_last_week(OUTPUT_FOLDER)
+    global REPORTS_PATH
+    plot = dashboard_last_week(REPORTS_PATH)
     if not plot:
-        bot.send_message(message.chat.id, "No data available")
+        telegram.send_message(message.chat.id, "No data available")
         return
 
-    bot.send_photo(message.chat.id, from_plot_to_image(plot))
+    telegram.send_photo(message.chat.id, from_plot_to_image(plot))
 
 
-def run_jobs():
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+@click.option('--path', required=True, help="Path of speed test reports")
+@click.option('--token', required=True, help="Telegram API token")
+def bot(token, path):
+    global REPORTS_PATH
+    REPORTS_PATH = Path(path)
+    telegram.token = token
+    telegram.polling()
+
+
+@cli.command()
+@click.option('--path', required=True, help="Path of speed test reports")
+def monitor(token, path):
+    global REPORTS_PATH
+    REPORTS_PATH = Path(path)
+
     logger.info("Starting speedtest app")
-    logger.info(f"Output folder: {OUTPUT_FOLDER}")
+    logger.info(f"Output folder: {REPORTS_PATH}")
     logger.info("Starting scheduler")
-    schedule.every(10).minutes.do(job_speed_test).run()
+    schedule.every(10).minutes.do(job_speed_test, path=REPORTS_PATH).run()
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 
-def run_bot():
-    bot.polling()
-
-
 if __name__ == "__main__":
-    if RUN_FUNCTION == "jobs":
-        run_jobs()
-    elif RUN_FUNCTION == "bot":
-        run_bot()
-    else:
-        logger.warning("Nothing to run")
+    cli()

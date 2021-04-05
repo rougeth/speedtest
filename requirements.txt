@@ -1,3 +1,4 @@
+click
 loguru
 matplotlib
 pandas
