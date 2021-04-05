@@ -23,14 +23,14 @@ $ python speed.py --path /path/to/output
 
 If you can to see the reports through Telegram, create a bot (Message `@botfather` at the app for more info) and get its token to use here:
 ```
-$ python speed.py --path /path/to/output --token <telegram-bot-token>
+$ python speed.py --path /path/to/output --token <telegram-bot-token> --id <your-telegram-id> 
 ```
-After that, you can use the commands `/today` and `/last_week` at the bot you created and see today's and last seven day's speed tests.
+Your Telegram ID is required so that the bot replies only to you. You can run it without it and use the command `/myid` to get your Telegram user ID. After that, you can use the commands `/today` and `/last_week` at the bot you created and see today's and last seven day's speed tests.
 
 ### Using Docker
 You can also use Docker to run both the monitor and bot:
 ```
 # Considering you can the reports to be stored at ~/speedtests
 $ docker run -it -v ~/speedtests/output -d rougeth/speedtest --path /output
-$ docker run -it -v ~/speedtests:/output -d rougeth/speedtest --path /output --token <telegram-bot-token>
+$ docker run -it -v ~/speedtests:/output -d rougeth/speedtest --path /output --id <your-telegram-id> --token <telegram-bot-token>
 ```
