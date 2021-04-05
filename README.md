@@ -1,4 +1,7 @@
 # speedtest
+
+![](https://media.giphy.com/media/3og0INAY5MLmEBubyU/giphy.gif)
+
 A script to monitor and notify internet speed.
 
 - Monitor download, upload and ping, every 10min, using [speedtest-cli](https://github.com/sivel/speedtest-cli).
