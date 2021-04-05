@@ -36,6 +36,7 @@ def reports(f):
                 logger.error(f"Erro while opening file. file={file.name!r}")
         logger.info(f"Report loaded. total={len(data)}")
         return data
+
     return wrapper
 
 
@@ -58,24 +59,27 @@ def dashboard_download_upload_ping(data):
 
     df = pd.DataFrame(data)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
-    df["download"] = df["download"].apply(lambda x: (x/10**6))
-    df["upload"] = df["upload"].apply(lambda x: (x/10**6))
+    df["download"] = df["download"].apply(lambda x: (x / 10 ** 6))
+    df["upload"] = df["upload"].apply(lambda x: (x / 10 ** 6))
 
-    plt.grid(color='black', linestyle='-.', linewidth=0.7)
+    plt.grid(color="black", linestyle="-.", linewidth=0.7)
     fig = plt.figure(tight_layout=True)
     gs = gridspec.GridSpec(2, 1)
 
-    plots = [{
-        "ylabel": "mbps",
-        "plots": [
-            ("timestamp", "download", "Download"),
-            ("timestamp", "upload", "Upload"),
-        ],
-    }, {
-        "ylabel": "ms",
-        "xlabel": "date",
-        "plots": [("timestamp", "ping", "Ping")],
-    }]
+    plots = [
+        {
+            "ylabel": "mbps",
+            "plots": [
+                ("timestamp", "download", "Download"),
+                ("timestamp", "upload", "Upload"),
+            ],
+        },
+        {
+            "ylabel": "ms",
+            "xlabel": "date",
+            "plots": [("timestamp", "ping", "Ping")],
+        },
+    ]
 
     for i, plot in enumerate(plots):
         ax = fig.add_subplot(gs[i, 0])
@@ -88,7 +92,7 @@ def dashboard_download_upload_ping(data):
             tick.set_rotation(45)
         ax.grid()
         if plot.get("xlabel"):
-            ax.set_xlabel('date')
+            ax.set_xlabel("date")
 
     return fig
 
@@ -106,7 +110,9 @@ def dashboard_last_week(reports_path):
 def job_speed_test():
     logger.info("Job started: job_speed_test")
     try:
-        output = subprocess.check_output("speedtest-cli --json", encoding="utf-8", shell=True)
+        output = subprocess.check_output(
+            "speedtest-cli --json", encoding="utf-8", shell=True
+        )
     except subprocess.CalledProcessError:
         logger.exception("speedtest-cli call failed")
         return
