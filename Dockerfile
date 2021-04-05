@@ -2,4 +2,4 @@ FROM python:slim
 WORKDIR /usr/src/app
 COPY . .
 RUN pip install -r requirements.txt
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python", "speed.py"]
