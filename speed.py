@@ -16,6 +16,7 @@ import telebot
 from loguru import logger
 
 
+ALLOWED_IDS = []
 REPORTS_PATH = ""
 telegram = telebot.TeleBot("invalid-token", threaded=False, skip_pending=True)
 
@@ -130,6 +131,9 @@ def from_plot_to_image(plot):
 
 @telegram.message_handler(commands=["today"])
 def bot_today(message):
+    if message.chat.id not in ALLOWED_IDS:
+        return
+
     global REPORTS_PATH
     plot = dashboard_today(REPORTS_PATH)
     if not plot:
@@ -141,6 +145,9 @@ def bot_today(message):
 
 @telegram.message_handler(commands=["last_week"])
 def bot_last_week(message):
+    if message.chat.id not in ALLOWED_IDS:
+        return
+
     global REPORTS_PATH
     plot = dashboard_last_week(REPORTS_PATH)
     if not plot:
@@ -150,23 +157,32 @@ def bot_last_week(message):
     telegram.send_photo(message.chat.id, from_plot_to_image(plot))
 
 
+@telegram.message_handler(commands=["myid"])
+def bot_myid(message):
+    telegram.send_message(message.chat.id, message.chat.id)
+
+
 @click.group()
 def cli():
     pass
 
 
 @cli.command()
-@click.option('--path', required=True, help="Path of speed test reports")
-@click.option('--token', required=True, help="Telegram API token")
-def bot(token, path):
-    global REPORTS_PATH
+@click.option("--path", required=True, help="Path of speed test reports")
+@click.option("--token", required=True, help="Telegram API token")
+@click.option(
+    "--id", multiple=True, help="User ID on Telegram allowed to see the reports"
+)
+def bot(id, token, path):
+    global REPORTS_PATH, ALLOWED_IDS
     REPORTS_PATH = Path(path)
+    ALLOWED_IDS = id
     telegram.token = token
     telegram.polling()
 
 
 @cli.command()
-@click.option('--path', required=True, help="Path of speed test reports")
+@click.option("--path", required=True, help="Path of speed test reports")
 def monitor(token, path):
     global REPORTS_PATH
     REPORTS_PATH = Path(path)
