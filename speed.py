@@ -171,7 +171,7 @@ def cli():
 @click.option("--path", required=True, help="Path of speed test reports")
 @click.option("--token", required=True, help="Telegram API token")
 @click.option(
-    "--id", multiple=True, help="User ID on Telegram allowed to see the reports"
+    "--id", type=int, multiple=True, help="User ID on Telegram allowed to see the reports"
 )
 def bot(id, token, path):
     global REPORTS_PATH, ALLOWED_IDS
