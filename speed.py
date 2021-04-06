@@ -5,6 +5,7 @@ import subprocess
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
+from pprint import pprint
 
 import click
 import matplotlib.dates as md
@@ -116,6 +117,11 @@ def job_speed_test(path):
         logger.exception("speedtest-cli call failed")
         return
 
+    data = json.loads(output)
+    download = data["download"] / 10 ** 6
+    upload = data["upload"] / 10 ** 6
+    logger.info(f"Download={download:.2f}, Upload={upload:.2f}, Ping={data['ping']!r}")
+
     filename = "{:%Y%m%d-%H%M}.json".format(datetime.now())
     with (path / filename).open("w") as fp:
         fp.write(output)
@@ -171,7 +177,10 @@ def cli():
 @click.option("--path", required=True, help="Path of speed test reports")
 @click.option("--token", required=True, help="Telegram API token")
 @click.option(
-    "--id", type=int, multiple=True, help="User ID on Telegram allowed to see the reports"
+    "--id",
+    type=int,
+    multiple=True,
+    help="User ID on Telegram allowed to see the reports",
 )
 def bot(id, token, path):
     global REPORTS_PATH, ALLOWED_IDS
@@ -183,7 +192,7 @@ def bot(id, token, path):
 
 @cli.command()
 @click.option("--path", required=True, help="Path of speed test reports")
-def monitor(token, path):
+def monitor(path):
     global REPORTS_PATH
     REPORTS_PATH = Path(path)
 
@@ -194,6 +203,22 @@ def monitor(token, path):
     while True:
         schedule.run_pending()
         time.sleep(1)
+
+
+@cli.command()
+def test():
+    output = subprocess.check_output(
+        "speedtest-cli --json", encoding="utf-8", shell=True
+    )
+    output = json.loads(output)
+
+    download = output["download"] / 10 ** 6
+    upload = output["upload"] / 10 ** 6
+    click.echo(f"Download: {upload:.2f}Mbps")
+    click.echo(f"Upload: {upload:.2f}Mbps")
+    click.echo(f"Ping: {output['ping']}")
+    click.echo(f"")
+    pprint(output)
 
 
 if __name__ == "__main__":
