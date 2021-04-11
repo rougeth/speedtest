@@ -4,4 +4,4 @@ matplotlib
 pandas
 pyTelegramBotAPI
 schedule
-speedtest-cli
+seaborn
